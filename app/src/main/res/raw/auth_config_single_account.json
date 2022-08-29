@@ -1,0 +1,16 @@
+{
+  "client_id" : "0111ec83-9925-4334-bfe9-3a6d163c3e03",
+  "authorization_user_agent" : "DEFAULT",
+  "redirect_uri" : "msauth://com.example.myapplication/22vkJFMPNpjEUKCeYPitgSBUA2o%3D",
+  "broker_redirect_uri_registered": false,
+  "account_mode" : "SINGLE",
+  "authorities" : [
+    {
+      "type": "AAD",
+      "audience": {
+        "type": "AzureADMyOrg",
+        "tenant_id": "46c67115-889e-4601-8e8d-6ff7e8bc6209"
+      }
+    }
+  ]
+}
