@@ -179,29 +179,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun buildClient(token: String): OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(10, TimeUnit.SECONDS)
-        .writeTimeout(10, TimeUnit.SECONDS)
-        .addInterceptor(GraphTokenInterceptor(token))
-        .build()
-
-    class GraphTokenInterceptor(_token: String): Interceptor {
-        private val token: String = _token
-
-        override fun intercept(chain: Interceptor.Chain): Response {
-            kotlin.runCatching {
-                return chain.proceed(
-                    chain.request().newBuilder()
-                        .header("Authorization", "Bearer $token")
-                        .build()
-                )
-            }.getOrElse {
-                throw it
-            }
-        }
-    }
-
     interface ADInformation {
         @GET("me")
         suspend fun getUser(): User
@@ -245,45 +222,6 @@ class MainActivity : AppCompatActivity() {
                 displayGraphResult(Gson().toJson(it))
             }
         }
-
-        /*
-        val accessToken: String  = authenticationResult.accessToken
-
-        val graphClient: GraphServiceClient<Request> = GraphServiceClient.builder()
-            .authenticationProvider {
-
-            }
-            .buildClient()
-        val graphClient: IGraphServiceClient = GraphServiceClient.builder()
-            .authenticationProvider {
-                Log.d(TAG, "Authenticating request," + it.requestUrl)
-                it.addHeader("Authorization", "Bearer $accessToken")
-            }
-            .buildClient()
-        graphClient.me()
-            .drive()
-            .buildRequest()
-            .get(object: ICallback<Drive> {
-                override fun success(result: Drive?) {
-                    result?.let {
-                        Log.d(TAG, "Found Drive " + it.id)
-                        displayGraphResult(it.rawObject)
-                    }
-                }
-                override fun failure(ex: ClientException?) {
-                    ex?.let {
-                        displayError(it)
-                    }
-                }
-            })
-         */
-    }
-
-    private suspend fun getDrive(client: GraphServiceClient<Request>): Drive? = withContext(Dispatchers.IO) {
-        client.me()
-            .drive()
-            .buildRequest()
-            .get()
     }
 
     private fun displayGraphResult(graphResponse: String) {
