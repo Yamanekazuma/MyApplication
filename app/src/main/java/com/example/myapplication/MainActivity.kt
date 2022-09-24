@@ -7,11 +7,25 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isInvisible
+import androidx.lifecycle.lifecycleScope
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
+import com.microsoft.graph.authentication.TokenCredentialAuthProvider
+import com.microsoft.graph.models.Drive
+import com.microsoft.graph.models.User
 import com.microsoft.graph.requests.GraphServiceClient
 import com.microsoft.identity.client.*
 import com.microsoft.identity.client.exception.MsalException
-import okhttp3.Request
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.*
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     private val SCOPES: List<String> = listOf("Files.Read")
@@ -165,7 +179,73 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun buildClient(token: String): OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(10, TimeUnit.SECONDS)
+        .writeTimeout(10, TimeUnit.SECONDS)
+        .addInterceptor(GraphTokenInterceptor(token))
+        .build()
+
+    class GraphTokenInterceptor(_token: String): Interceptor {
+        private val token: String = _token
+
+        override fun intercept(chain: Interceptor.Chain): Response {
+            kotlin.runCatching {
+                return chain.proceed(
+                    chain.request().newBuilder()
+                        .header("Authorization", "Bearer $token")
+                        .build()
+                )
+            }.getOrElse {
+                throw it
+            }
+        }
+    }
+
+    interface ADInformation {
+        @GET("me")
+        suspend fun getUser(): User
+    }
+
+    private suspend fun requestUserInfo(client: OkHttpClient): User = Retrofit.Builder()
+            .baseUrl("https://graph.microsoft.com/v1.0/")
+            .addConverterFactory(
+                GsonConverterFactory.create(
+                    GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
+                )
+            )
+            .build()
+            .create(ADInformation::class.java).getUser()
+
     private fun callGraphAPI(authenticationResult: IAuthenticationResult) {
+        val accessToken: String = authenticationResult.accessToken
+
+        val graphClient: OkHttpClient = OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
+            .addInterceptor {
+                kotlin.runCatching {
+                    it.proceed(
+                        it.request().newBuilder()
+                            .header("Authorization", "Bearer $accessToken")
+                            .build()
+                    )
+                }.getOrElse {
+                    displayError(Exception(it))
+                    throw it
+                }
+            }
+            .build()
+
+        lifecycleScope.launch {
+            val user: User = requestUserInfo(graphClient)
+            val drive: Drive? = user.drive
+            drive?.let {
+                displayGraphResult(Gson().toJson(it))
+            }
+        }
+
         /*
         val accessToken: String  = authenticationResult.accessToken
 
@@ -199,8 +279,15 @@ class MainActivity : AppCompatActivity() {
          */
     }
 
-    private fun displayGraphResult(graphResponse: JsonObject) {
-        logTextView.text = graphResponse.toString()
+    private suspend fun getDrive(client: GraphServiceClient<Request>): Drive? = withContext(Dispatchers.IO) {
+        client.me()
+            .drive()
+            .buildRequest()
+            .get()
+    }
+
+    private fun displayGraphResult(graphResponse: String) {
+        logTextView.text = graphResponse
     }
 
     private fun displayError(exception: Exception) {

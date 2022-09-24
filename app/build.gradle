@@ -33,14 +33,36 @@ android {
 }
 
 dependencies {
-    //implementation 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
-    //implementation 'com.microsoft.identity.client:msal:2.+'
-    //implementation 'com.microsoft.graph:microsoft-graph:1.5.+'
-
+    // MSAL
     // https://mvnrepository.com/artifact/com.microsoft.identity.client/msal
     implementation 'com.microsoft.identity.client:msal:4.0.1'
+
+    // Graph API
     // https://mvnrepository.com/artifact/com.microsoft.graph/microsoft-graph
     implementation 'com.microsoft.graph:microsoft-graph:5.33.0'
+
+    // Coroutines
+    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-android
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
+
+    // LifecycleScope
+    // https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-runtime-ktx
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
+
+    // Gson
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    implementation 'com.google.code.gson:gson:2.9.1'
+
+    // Retrofit
+    // https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    // https://mvnrepository.com/artifact/com.squareup.retrofit2/converter-gson
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+
+    // OkHttp
+    // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.4.1'
